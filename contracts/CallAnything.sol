@@ -61,4 +61,55 @@ contract CallAnything {
         );
         return (bytes4(returnData), success);
     }
+
+    // We can also get a function selector from data sent into the call
+    function getSelectorTwo() public view returns (bytes4 selector) {
+        bytes memory functionCallData = abi.encodeWithSignature(
+            "transfer(address,uint256)",
+            address(this),
+            123
+        );
+        selector = bytes4(
+            bytes.concat(
+                functionCallData[0],
+                functionCallData[1],
+                functionCallData[2],
+                functionCallData[3]
+            )
+        );
+    }
+
+    // Another way to get data (hard coded)
+    function getCallData() public view returns (bytes memory) {
+        return abi.encodeWithSignature("transfer(address,uint256)", address(this), 123);
+    }
+
+    // Pass this:
+    // 0xa9059cbb000000000000000000000000d7acd2a9fd159e69bb102a1ca21c9a3e3a5f771b000000000000000000000000000000000000000000000000000000000000007b
+    // This is output of `getCallData()`
+    // This is another low level way to get function selector using assembly
+    // You can actually write code that resembles the opcodes using the assembly keyword!
+    // This in-line assembly is called "Yul"
+    // It's a best practice to use it as little as possible - only when you need to do something very VERY specific
+    function getSelectorThree(bytes calldata functionCallData)
+        public
+        pure
+        returns (bytes4 selector)
+    {
+        // offset is a special attribute of calldata
+        assembly {
+            selector := calldataload(functionCallData.offset)
+        }
+    }
+
+    // Another way to get your selector with the "this" keyword
+    function getSelectorFour() public pure returns (bytes4 selector) {
+        return this.transfer.selector;
+    }
+
+    // Just a function that gets the signature
+    function getSignatureOne() public pure returns (string memory) {
+        return "transfer(address,uint256)";
+    }
 }
+
